@@ -10,8 +10,8 @@ struct_message myData;
 
 Servo myservo1, myservo2;
 const int SERVOS = 2;
-int Left_motor = 34;
-int Left_motor_pwm = 35;
+int Left_motor = 22;
+int Left_motor_pwm = 23;
 int Right_motor = 32;
 int Right_motor_pwm = 33;
 int enA = 25;
@@ -19,7 +19,8 @@ int enB = 26;
 
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
-  if (myData.up == HIGH) {
+  Serial.println(myData.up);
+  if (myData.up == 1) {
     forward();
     Serial.println("chạy thẳng");
   } else
@@ -63,13 +64,15 @@ void setup() {
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
-  }
+  } else
+    Serial.println("Initialazed with success");
   esp_now_register_recv_cb(OnDataRecv);
-
+  Serial.print("state of up:");
+  Serial.println(myData.up);
   myservo1.attach(12);
   myservo2.attach(14);
-  pinMode(34, OUTPUT);
-  pinMode(35, OUTPUT);
+  pinMode(22, OUTPUT);
+  pinMode(23, OUTPUT);
   pinMode(32, OUTPUT);
   pinMode(33, OUTPUT);
   pinMode(25, OUTPUT);
@@ -83,39 +86,41 @@ void loop() {
 
 void forward() {
   analogWrite(25, 220);
-  digitalWrite(34, HIGH);
-  digitalWrite(35, LOW);
+  digitalWrite(22, HIGH);
+  digitalWrite(23, LOW);
   analogWrite(26, 220);
   digitalWrite(32, LOW);
   digitalWrite(33, HIGH);
 }
 void right() {
   analogWrite(25, 200);
-  digitalWrite(34, HIGH);
-  digitalWrite(35, LOW);
+  digitalWrite(22, HIGH);
+  digitalWrite(23, LOW);
   analogWrite(25, 200);
   digitalWrite(32, HIGH);
   digitalWrite(33, LOW);
 }
 void back() {
   analogWrite(26, 220);
-  digitalWrite(34, LOW);
-  digitalWrite(35, HIGH);
+  digitalWrite(22, LOW);
+  digitalWrite(23, HIGH);
   analogWrite(26, 220);
   digitalWrite(32, HIGH);
   digitalWrite(33, LOW);
 }
 void left() {
   analogWrite(25, 200);
-  digitalWrite(34, LOW);
-  digitalWrite(35, HIGH);
+  digitalWrite(22, LOW);
+  digitalWrite(23, HIGH);
   analogWrite(26, 200);
   digitalWrite(32, LOW);
   digitalWrite(33, HIGH);
 }
 void stop() {
-  digitalWrite(34, LOW);
-  digitalWrite(35, LOW);
+  analogWrite(25, 0);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+  analogWrite(26, 0);
   digitalWrite(32, LOW);
   digitalWrite(33, LOW);
 }

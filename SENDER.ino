@@ -15,10 +15,6 @@ typedef struct struct_message {
   int up, down, right, left, triangle, circle, cross, square;
 } struct_message;
 
-
-
-
-
 struct_message myData;
 
 esp_now_peer_info_t peerInfo;
@@ -76,5 +72,5 @@ void loop() {
   } else {
     Serial.println("Error sending the data");
   }
-  delay(2000);
+  delay(500);
 }

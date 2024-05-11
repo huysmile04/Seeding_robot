@@ -3,10 +3,10 @@ float error = 0.0 , P = 0.0 , I = 0.0 , D = 0.0, PID = 0.0;  //set sai số ban 
 float pre_error  = 0.0; // đặt trạng thái lúc trước là 0 vì chưa có trạng thái nào được xảy ra
 uint16_t ss[5]; //đặt type data of five sensors is unsigned int.
 int left_state = 0;
-int right_state = 0;
+int right_state = 0;initial_speed + PID
 int stop_state = 0;
 int redflag = 0; // lưu trạng thái vật thể nằm trên xe
-int initial_speed = 60; // set tốc độ ban đầu của xe
+int initial_speed = 120; // set tốc độ ban đầu của xe
 #define in1 7    //khai báo các chân cho l298n xuất ra động cơ
 #define in2 6
 #define in3 5
@@ -35,13 +35,13 @@ void setup() {
   Serial.begin(9600);   //khởi tạo serial để đọc dữ liệu từ cảm biến xuất ra lên máy tính với tốc độ 9600
 }
 void Sensor_read(){
-  ss[0] = analogRead(A0);  // gán tín hiệu analog đọc từ cảm biến vào các biến ss[] từ 0 đến 5
-  ss[1] = analogRead(A1);
-  ss[2] = analogRead(A2);
-  ss[3] = analogRead(A3);
-  ss[4] = analogRead(A4);
+  ss[0] = digitalRead(A0);  // gán tín hiệu digital đọc từ cảm biến vào các biến ss[] từ 0 đến 5
+  ss[1] = digitalRead(A1);
+  ss[2] = digitalRead(A2);
+  ss[3] = digitalRead(A3);
+  ss[4] = digitalRead(A4);
 
-  const int threshold = 70; // thiết lập ngưỡng cho tín hiệu lấy từ cảm bin
+  const int threshold = 1; // thiết lập ngưỡng cho tín hiệu lấy từ cảm bin
   //Quy ước: các cảm biến được đánh số từ 0 đến 4 từ trái sang phải, cảm biến số 2 là vị trí trung tâm, cảm biến số 0 là vị trí bên trái, cảm biến số 4 là vị trí bên phải
   if ((ss[0] < threshold) && (ss[1] < threshold) && (ss[2] < threshold) && (ss[3] < threshold) && ((ss[4] >= threshold))) {
     error = 4; // line nằm ở cảm biến số 4
@@ -81,8 +81,8 @@ void PID_controller(){
   I = constrain(I + error, -5, 5);  //giới hạn I để giảm dao động tín hiệu khi bị vọt lố, ổn định hệ thống nhanh hơn
   D = error - pre_error; //so sánh sai số hiện tại với sai số ở trạng thái lúc trước, tính toán độ vọt lố, lệch khỏi line nhiều hay ít để điều chỉnh xung pwm cho động cơ 
   PID = (kp*P) + (ki*I) + (kd*D); //tính toán PID, điều chỉnh xung băm cho động cơ quay
-  // Serial.print("PID: ");
-  // Serial.println(PID);
+  Serial.print("PID: ");
+  Serial.println(PID);
 }
 
 void Motor_controll(){
@@ -120,31 +120,35 @@ void Motor_controll(){
     digitalWrite(in4, LOW);
   }
   // Nếu không có trường hợp đặc biệt nào, động cơ sẽ quay theo tính toán PID và bám theo line
-  int speed_difference = initial_speed - abs(PID); //tính toán tốc độ dựa trên thuật toán PID
-  int right_speed = constrain(speed_difference + PID, 0, 255); //ghi tốc độ đã được tính toán vào tốc độ động cơ bên phải
-  int left_speed = constrain(speed_difference - PID, 0, 255); //ghi tốc độ đã được tính toán vào tốc độ động cơ bên trsi
-  analogWrite(enA, abs(right_speed));
+  //int speed_difference = initial_speed - abs(PID); //tính toán tốc độ dựa trên thuật toán PID
+  // int right_speed = constrain(speed_difference - PID, 0, 255); //ghi tốc độ đã được tính toán vào tốc độ động cơ bên phải
+  // int left_speed = constrain(speed_difference + PID, 0, 255); //ghi tốc độ đã được tính toán vào tốc độ động cơ bên trái
+  // int right_speed = initial_speed - PID;
+  // int left_speed = initial_speed + PID;
+  int left_speed = map(initial_speed + PID, 0, 480, 0, 225);
+  int right_speed = map(initial_speed - PID, 0, 480, 0, 225);   //em chỉnh băm xung 2 hàng này, hiện tại băm xung ko được, 
   analogWrite(enB, abs(left_speed));
+  analogWrite(enA, abs(right_speed));
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH);
   Serial.print("Tốc độ bên phải và bên trái: ");
-  Serial.print(right_speed);
+  Serial.print(left_speed);
   Serial.print("\t");
-  Serial.println(left_speed);
+  Serial.println(right_speed);
 }
 
 void Object_detect(){
   //hàm nhận diện vật thể
   int object_sensor = digitalRead(IR);
   if ( object_sensor == 1){
-    analogWrite(enA, 255);
-    analogWrite(enB, 255);
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, HIGH);
+    // analogWrite(enA, 255);
+    // analogWrite(enB, 255);
+    // digitalWrite(in1, HIGH);
+    // digitalWrite(in2, LOW);
+    // digitalWrite(in3, LOW);
+    // digitalWrite(in4, HIGH);
     delay(500);
     redflag = 1; //gắn cờ bằng 1 để khởi động các hàm dò line
   }
